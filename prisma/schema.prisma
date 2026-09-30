@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Transaction_status {
+  PENDING
+  DEBITED
+  CREDITED
+  FAILED
+}
+
+enum LedgerType {
+  DEBIT
+  CREDIT
+}
+
+model wallet {
+  id         BigInt   @id @default(autoincrement())
+  user_id    BigInt   @unique
+  balance    BigInt   @default(0)
+  version    Int      @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([user_id])
+  @@map("wallet")
+}
+
+model Transaction {
+  id              BigInt             @id @default(autoincrement())
+  from_user       BigInt
+  to_user         BigInt
+  amount          BigInt
+  status          Transaction_status @default(PENDING)
+  idempotency_key String             @unique
+  created_at      DateTime           @default(now())
+
+  @@index([from_user])
+  @@index([to_user])
+  @@index([status])
+  @@index([idempotency_key])
+  @@map("Transaction")
+}
+
+model Ledger {
+  id             BigInt     @id @default(autoincrement())
+  user_id        BigInt
+  transaction_id BigInt
+  amount         BigInt
+  type           LedgerType
+  created_at     DateTime   @default(now())
+
+  @@index([user_id])
+  @@index([transaction_id])
+  @@index([type])
+  @@index([created_at])
+  @@map("Ledger")
+}
